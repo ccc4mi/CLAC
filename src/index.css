@@ -1,0 +1,227 @@
+:root {
+    --bg-color: #05020c;
+    --neon-pink: #ff007f;
+    --neon-cyan: #00ffff;
+    --neon-yellow: #ffff00;
+    --panel-bg-light: rgba(245, 245, 245, 0.95);
+    --font-sans: 'Inter', sans-serif;
+    --font-serif: 'Fraunces', serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body,
+html,
+#root {
+    width: 100vw;
+    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: var(--bg-color);
+    color: #1a1a1a;
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+}
+
+/* Scrollbar retro */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--neon-pink);
+    border-radius: 4px;
+}
+
+/* Panel Claro */
+.sidebar-panel {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 320px;
+    max-height: calc(100vh - 40px);
+    background: var(--panel-bg-light);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: 24px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow-y: auto;
+    color: #1a1a1a;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-title {
+    font-family: var(--font-serif);
+    font-weight: 900;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    margin: 0;
+    color: #1a1a1a;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-family: var(--font-serif);
+    font-weight: 900;
+    font-size: 20px;
+    cursor: pointer;
+    color: #1a1a1a;
+    padding: 4px;
+}
+
+.section-title {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    color: #1a1a1a;
+}
+
+/* Dropzone estilizada claro */
+.dropzone-container {
+    border: 1.5px dashed #4a4a4a;
+    border-radius: 16px;
+    padding: 30px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.dropzone-container:hover {
+    border-color: #1a1a1a;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.dropzone-content {
+    color: #1a1a1a;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.status-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #1a1a1a;
+    font-size: 14px;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #1a1a1a;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn-secondary {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid #1a1a1a;
+    border-radius: 20px;
+    color: #1a1a1a;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* Colores Section */
+.colors-row {
+    display: flex;
+    gap: 12px;
+}
+
+.color-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #1a1a1a;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.color-circle:hover {
+    transform: scale(1.1);
+}
+
+.about-title {
+    font-family: var(--font-serif);
+    font-weight: 900;
+    font-size: 20px;
+    margin-bottom: 12px;
+}
+
+.about-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #1a1a1a;
+    margin-bottom: 24px;
+}
+
+.footer-text {
+    text-align: center;
+    font-size: 14px;
+    color: #1a1a1a;
+}
+
+.footer-text strong {
+    font-weight: 600;
+}
+
+/* Toggle btn if panel closed */
+.toggle-panel-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--panel-bg-light);
+    border: 1px solid #1a1a1a;
+    color: #1a1a1a;
+    padding: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 11;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    font-family: var(--font-serif);
+    font-weight: 900;
+    font-size: 18px;
+}
+
+@media (max-width: 768px) {
+    .sidebar-panel {
+        width: calc(100vw - 40px);
+    }
+}
