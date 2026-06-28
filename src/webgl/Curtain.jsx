@@ -44,10 +44,36 @@ export function Curtain({ pixelData }) {
 
     // Store the global position and normalized mouse/finger speed
     const pointerRef = useRef({ x: 0, y: 0, vx: 0, vy: 0, active: false })
+    const shakeRef = useRef({ ax: 0, az: 0 })
 
     useEffect(() => {
         let lastX = null
         let lastY = null
+
+        // Device motion for shaking
+        const handleMotion = (event) => {
+            if (!event.acceleration) return;
+            const { x, y, z } = event.acceleration;
+            
+            // Ignore micro-jitters
+            if (Math.abs(x) > 1.5 || Math.abs(z) > 1.5) {
+                // Accumulate shake force
+                shakeRef.current.ax += (x || 0) * 0.05;
+                shakeRef.current.az += (z || 0) * 0.05;
+            }
+        }
+        window.addEventListener('devicemotion', handleMotion, false)
+
+        // Request permission on first interaction (required for iOS 13+)
+        const handleFirstInteraction = () => {
+            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission().catch(() => {})
+            }
+            window.removeEventListener('click', handleFirstInteraction)
+            window.removeEventListener('touchstart', handleFirstInteraction)
+        }
+        window.addEventListener('click', handleFirstInteraction)
+        window.addEventListener('touchstart', handleFirstInteraction)
 
         const handlePointerDown = (e) => {
             lastX = e.clientX
@@ -139,6 +165,9 @@ export function Curtain({ pixelData }) {
         window.addEventListener('touchend', handlePointerLeave)
 
         return () => {
+            window.removeEventListener('devicemotion', handleMotion)
+            window.removeEventListener('click', handleFirstInteraction)
+            window.removeEventListener('touchstart', handleFirstInteraction)
             window.removeEventListener('pointerdown', handlePointerDown)
             window.removeEventListener('pointermove', handlePointerMove)
             window.removeEventListener('touchstart', handleTouchStart)
@@ -189,6 +218,12 @@ export function Curtain({ pixelData }) {
         const pointerActive = pointerRef.current.active
 
         const globalSensitivity = physicsSensitivity
+
+        // Decay device shake over time
+        const currentShakeX = shakeRef.current.ax
+        const currentShakeZ = shakeRef.current.az
+        shakeRef.current.ax *= 0.8
+        shakeRef.current.az *= 0.8
 
         // Fast decay of pointer speed (if the mouse is still, speed drops to 0)
         pointerRef.current.vx *= 0.5
@@ -246,6 +281,24 @@ export function Curtain({ pixelData }) {
             const link = linksArray[i]
             const instance = children[i]
             if (!instance) continue
+
+            // Apply device shake globally to all links
+            if (Math.abs(currentShakeX) > 0.001 || Math.abs(currentShakeZ) > 0.001) {
+                // Higher rows (bottom of curtain) should swing more than top rows
+                const swingFactor = (link.row / rows) * globalSensitivity
+                link.vx += currentShakeX * swingFactor
+                link.vz += currentShakeZ * swingFactor
+                
+                // Sound effect for shaking
+                const shakeForce = Math.abs(currentShakeX) + Math.abs(currentShakeZ)
+                const speed = Math.sqrt(link.vx * link.vx + link.vz * link.vz)
+                const now = state.clock.getElapsedTime()
+                
+                if (shakeForce > 0.1 && speed > 0.1 && now - link.lastSoundTime > 0.3 && Math.random() > 0.98) {
+                    audioSynth.playClack(Math.min(1.0, shakeForce * 2.0))
+                    link.lastSoundTime = now
+                }
+            }
 
             // Apply the column's push to this link
             if (colPushX[link.column] !== 0) {

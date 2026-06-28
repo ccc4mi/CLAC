@@ -18,9 +18,9 @@ body,
 html,
 #root {
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: hidden; /* Evita cualquier scroll accidental */
     background-color: var(--bg-color);
     color: #1a1a1a;
     font-family: var(--font-sans);
@@ -47,7 +47,7 @@ html,
     top: 20px;
     right: 20px;
     width: 320px;
-    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
     background: var(--panel-bg-light);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
