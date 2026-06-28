@@ -80,36 +80,36 @@ function AppContent() {
                     <div>
                         <div className="section-title">Colores (Rayas y Zócalo)</div>
                         <div className="colors-row">
-                            <label 
-                                className="color-circle" 
-                                style={{ backgroundColor: color1, overflow: 'hidden', position: 'relative' }} 
+                            <label
+                                className="color-circle"
+                                style={{ backgroundColor: color1, overflow: 'hidden', position: 'relative' }}
                             >
-                                <input 
-                                    type="color" 
-                                    value={color1} 
-                                    onChange={(e) => handleColorChange(e.target.value, color2, color3)} 
+                                <input
+                                    type="color"
+                                    value={color1}
+                                    onChange={(e) => handleColorChange(e.target.value, color2, color3)}
                                     style={{ opacity: 0, width: '200%', height: '200%', cursor: 'pointer', position: 'absolute', top: '-50%', left: '-50%' }}
                                 />
                             </label>
-                            <label 
-                                className="color-circle" 
-                                style={{ backgroundColor: color2, overflow: 'hidden', position: 'relative' }} 
+                            <label
+                                className="color-circle"
+                                style={{ backgroundColor: color2, overflow: 'hidden', position: 'relative' }}
                             >
-                                <input 
-                                    type="color" 
-                                    value={color2} 
-                                    onChange={(e) => handleColorChange(color1, e.target.value, color3)} 
+                                <input
+                                    type="color"
+                                    value={color2}
+                                    onChange={(e) => handleColorChange(color1, e.target.value, color3)}
                                     style={{ opacity: 0, width: '200%', height: '200%', cursor: 'pointer', position: 'absolute', top: '-50%', left: '-50%' }}
                                 />
                             </label>
-                            <label 
-                                className="color-circle" 
-                                style={{ backgroundColor: color3, overflow: 'hidden', position: 'relative' }} 
+                            <label
+                                className="color-circle"
+                                style={{ backgroundColor: color3, overflow: 'hidden', position: 'relative' }}
                             >
-                                <input 
-                                    type="color" 
-                                    value={color3} 
-                                    onChange={(e) => handleColorChange(color1, color2, e.target.value)} 
+                                <input
+                                    type="color"
+                                    value={color3}
+                                    onChange={(e) => handleColorChange(color1, color2, e.target.value)}
                                     style={{ opacity: 0, width: '200%', height: '200%', cursor: 'pointer', position: 'absolute', top: '-50%', left: '-50%' }}
                                 />
                             </label>
@@ -125,7 +125,7 @@ function AppContent() {
                         <p className="about-text">
                             Inspirado en las típicas cortinas plásticas de los almacenes de barrio,
                             CLAC! es un juguete visual interactivo diseñado para deformar,
-                            re-enhebrar y customizar. Pasá, sacudí los eslabones y hacé ruido.
+                            re-enhebrar y customizar. Pasá, sacudí los eslabones o movelos y hacé ruido.
                         </p>
                         <div className="footer-text">
                             2026 CLAC! made by <strong>ccc4.mi</strong>
