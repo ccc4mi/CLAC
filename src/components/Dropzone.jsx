@@ -1,6 +1,5 @@
 import React, { useCallback, useRef } from 'react';
 import { useCurtain } from '../context/CurtainContext';
-import { Upload } from 'lucide-react';
 
 export function Dropzone() {
     const { setCurrentImage, isLoading } = useCurtain();

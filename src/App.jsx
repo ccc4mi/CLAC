@@ -7,9 +7,7 @@ import { getPresetImageById, generateCustomPattern } from './utils/presets';
 function AppContent() {
     const {
         pixelData,
-        currentImage,
-        setCurrentImage,
-        isLoading
+        setCurrentImage
     } = useCurtain();
 
     const [isPanelOpen, setIsPanelOpen] = useState(true);

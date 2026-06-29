@@ -1,7 +1,6 @@
 import React, { useRef, useMemo, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Instances, Instance } from '@react-three/drei'
-import * as THREE from 'three'
 import { LinkGeometry } from './Link'
 import { useCurtain } from '../context/CurtainContext'
 import { audioSynth } from '../utils/audio'
@@ -53,7 +52,7 @@ export function Curtain({ pixelData }) {
         // Device motion for shaking
         const handleMotion = (event) => {
             if (!event.acceleration) return;
-            const { x, y, z } = event.acceleration;
+            const { x, z } = event.acceleration;
             
             // Ignore micro-jitters
             if (Math.abs(x) > 1.5 || Math.abs(z) > 1.5) {
