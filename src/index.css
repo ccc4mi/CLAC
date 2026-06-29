@@ -92,7 +92,6 @@ html,
 .section-title {
     font-size: 15px;
     font-weight: 500;
-    margin-bottom: 12px;
     color: #1a1a1a;
 }
 
@@ -156,6 +155,13 @@ html,
     background: rgba(0, 0, 0, 0.05);
 }
 
+/* Sidebar Section Container */
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 /* Colores Section */
 .colors-row {
     display: flex;
@@ -186,7 +192,6 @@ html,
     font-size: 14px;
     line-height: 1.5;
     color: #1a1a1a;
-    margin-bottom: 24px;
 }
 
 .footer-text {

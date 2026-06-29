@@ -68,17 +68,14 @@ function AppContent() {
                         </button>
                     </div>
 
-                    <div>
-                        <div className="section-title">Cambiar máscara</div>
-                        <Dropzone />
-                        <div style={{ height: '12px' }}></div>
-                        <button className="btn-secondary" onClick={handleReset}>
-                            Revertir a rayado clásico
-                        </button>
-                    </div>
+                    <p className="about-text">
+                        Inspirado en las típicas cortinas plásticas de los almacenes de barrio,
+                        CLAC! es un juguete visual interactivo diseñado para deformar,
+                        re-enhebrar y customizar. Pasá, sacudí los eslabones y hacé ruido.
+                    </p>
 
-                    <div>
-                        <div className="section-title">Colores (Rayas y Zócalo)</div>
+                    <div className="sidebar-section">
+                        <div className="section-title">Colores</div>
                         <div className="colors-row">
                             <label
                                 className="color-circle"
@@ -116,20 +113,20 @@ function AppContent() {
                         </div>
                     </div>
 
+                    <div className="sidebar-section">
+                        <div className="section-title">Cambiar máscara</div>
+                        <Dropzone />
+                        <button className="btn-secondary" onClick={handleReset}>
+                            Revertir a rayado clásico
+                        </button>
+                    </div>
+
                     <button className="btn-secondary" onClick={handleDownload}>
                         ↓ Descargar cortina
                     </button>
 
-                    <div>
-                        <h3 className="about-title">Sobre CLAC!</h3>
-                        <p className="about-text">
-                            Inspirado en las típicas cortinas plásticas de los almacenes de barrio,
-                            CLAC! es un juguete visual interactivo diseñado para deformar,
-                            re-enhebrar y customizar. Pasá, sacudí los eslabones o movelos y hacé ruido.
-                        </p>
-                        <div className="footer-text">
-                            2026 CLAC! made by <strong>ccc4.mi</strong>
-                        </div>
+                    <div className="footer-text">
+                        2026 CLAC! made by <strong>ccc4.mi</strong>
                     </div>
                 </div>
             )}
