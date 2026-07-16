@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { Instances, Instance } from '@react-three/drei'
+import * as THREE from 'three'
 import { LinkGeometry } from './Link'
 import { useCurtain } from '../context/CurtainContext'
 import { audioSynth } from '../utils/audio'
@@ -187,6 +187,7 @@ export function Curtain({ pixelData }) {
                 list.push({
                     x: startX + c * linkWidth,
                     y: startY - r * linkHeight,
+                    z: 0,
                     baseX: startX + c * linkWidth, // Original position
                     vx: 0,
                     ax: 0,
@@ -200,23 +201,52 @@ export function Curtain({ pixelData }) {
         return list
     }, [columns, rows, width, height, linkWidth, linkHeight])
 
-    // Helper function to return the color directly
-    const getPaletteColor = (rgbArray) => {
-        if (!rgbArray) return '#f5ebd5'
-        const [r, g, b] = rgbArray
-        return [r, g, b]
-    }
+    // Pre-allocated auxiliary structures to avoid GC thrashing in simulation loop
+    const tempObject = useMemo(() => new THREE.Object3D(), [])
+    const tempColor = useMemo(() => new THREE.Color(), [])
+    
+    // Reactive flag to update colors on the InstancedMesh
+    const colorsNeedUpdateRef = useRef(true)
+
+    useEffect(() => {
+        colorsNeedUpdateRef.current = true
+    }, [linksArray, pixelData, columns, rows])
 
     // 60 FPS physical simulation loop
     useFrame((state) => {
         if (!instancesRef.current) return
 
-        const children = instancesRef.current.children
+        const mesh = instancesRef.current
         const targetX = (pointerRef.current.x * width) / 2
         const targetY = (pointerRef.current.y * height) / 2
         const pointerActive = pointerRef.current.active
 
         const globalSensitivity = physicsSensitivity
+
+        // 1. Lazy update colors on the InstancedMesh only when they actually change
+        if (colorsNeedUpdateRef.current) {
+            colorsNeedUpdateRef.current = false
+            for (let i = 0; i < linksArray.length; i++) {
+                const link = linksArray[i]
+                let color = [0.96, 0.92, 0.84] // Classic butter white
+
+                if (pixelData && pixelData.length > 0) {
+                    const idx = link.row * columns + link.column
+                    if (pixelData[idx]) {
+                        color = pixelData[idx].color
+                    }
+                } else {
+                    // Simple fallback pattern in case the parse fails
+                    if (link.row > rows - 3) color = [0.12, 0.47, 0.17] // Green
+                    else if (link.column > 10 && link.column < 25 && link.row < 18) color = [0.19, 0.11, 0.11] // Dark brown
+                }
+                tempColor.setRGB(color[0], color[1], color[2])
+                mesh.setColorAt(i, tempColor)
+            }
+            if (mesh.instanceColor) {
+                mesh.instanceColor.needsUpdate = true
+            }
+        }
 
         // Decay device shake over time
         const currentShakeX = shakeRef.current.ax
@@ -232,54 +262,75 @@ export function Curtain({ pixelData }) {
         const pVx = pointerRef.current.vx * 150
         const pVz = Math.abs(pointerRef.current.vx * 50) + Math.abs(pointerRef.current.vy * 50)
 
-        // 1. Accumulate forces per column
+        // 2. Accumulate forces per column (optimized grid traversal)
         const colPushX = new Float32Array(columns)
         const colPushZ = new Float32Array(columns)
-        let playSound = false;
-        let soundForce = 0;
+        let playSound = false
+        let soundForce = 0
 
         if (pointerActive && (Math.abs(pVx) > 0.1 || Math.abs(pVz) > 0.1)) {
-            for (let i = 0; i < linksArray.length; i++) {
-                const link = linksArray[i]
-                const dx = link.x - targetX
-                const dy = link.y - targetY
-                const distance = Math.sqrt(dx * dx + dy * dy)
+            const effectRadius = 1.0 * beadScale
+            const effectRadiusSq = effectRadius * effectRadius
 
-                // Reduce effect radius to be more localized (only pushes the touched row and its neighbors)
-                const effectRadius = 1.0 * beadScale
+            const startX = -width / 2
+            const startY = height / 2
 
-                if (distance < effectRadius) {
-                    const force = (1.0 - distance / effectRadius) * globalSensitivity
+            // Calculate grid coords for the pointer
+            const targetCol = Math.round((targetX - startX) / linkWidth)
+            const targetRow = Math.round((startY - targetY) / linkHeight)
 
-                    // Push in the direction the mouse is moving (pVx)
-                    colPushX[link.column] += pVx * force * 0.10
-                    // Always push a bit towards the background (Z) to simulate 3D relief
-                    colPushZ[link.column] += pVz * force * 0.10
+            // Bounds for checking neighboring eslabones
+            const colRadius = Math.ceil(effectRadius / linkWidth) + 1
+            const rowRadius = Math.ceil(effectRadius / linkHeight) + 1
 
-                    const speed = Math.sqrt(link.vx * link.vx + link.vz * link.vz)
-                    const now = state.clock.getElapsedTime()
-                    if (distance < 0.6 * beadScale && speed < 0.08 && now - link.lastSoundTime > 0.15) {
-                        playSound = true;
-                        soundForce = Math.abs(pVx) * force;
-                        link.lastSoundTime = now;
+            const minCol = Math.max(0, targetCol - colRadius)
+            const maxCol = Math.min(columns - 1, targetCol + colRadius)
+            const minRow = Math.max(0, targetRow - rowRadius)
+            const maxRow = Math.min(rows - 1, targetRow + rowRadius)
+
+            for (let c = minCol; c <= maxCol; c++) {
+                for (let r = minRow; r <= maxRow; r++) {
+                    const idx = c * rows + r
+                    const link = linksArray[idx]
+                    if (!link) continue
+
+                    const dx = link.x - targetX
+                    const dy = link.y - targetY
+                    const distanceSq = dx * dx + dy * dy
+
+                    // Use squared distance check first to bypass slow Math.sqrt calls
+                    if (distanceSq < effectRadiusSq) {
+                        const distance = Math.sqrt(distanceSq)
+                        const force = (1.0 - distance / effectRadius) * globalSensitivity
+
+                        // Push in the direction the mouse is moving (pVx)
+                        colPushX[link.column] += pVx * force * 0.10
+                        // Always push a bit towards the background (Z) to simulate 3D relief
+                        colPushZ[link.column] += pVz * force * 0.10
+
+                        const speed = Math.sqrt(link.vx * link.vx + link.vz * link.vz)
+                        const now = state.clock.getElapsedTime()
+                        if (distance < 0.6 * beadScale && speed < 0.08 && now - link.lastSoundTime > 0.15) {
+                            playSound = true
+                            soundForce = Math.abs(pVx) * force
+                            link.lastSoundTime = now
+                        }
                     }
                 }
             }
 
             if (playSound) {
-                audioSynth.playClack(Math.min(1.0, soundForce * 3.0)) // Even more sensitive
+                audioSynth.playClack(Math.min(1.0, soundForce * 3.0))
             }
         }
 
-        // 2. String simulation (Position Based Dynamics)
+        // 3. String simulation (Position Based Dynamics)
         const damping = 0.90 // Momentum conservation
         const gravity = 0.01 // How fast it returns to vertical center
         const stiffness = 0.75 // 0.0 to 1.0. Higher = less snaking, firmer chain.
 
         for (let i = 0; i < linksArray.length; i++) {
             const link = linksArray[i]
-            const instance = children[i]
-            if (!instance) continue
 
             // Apply device shake globally to all links
             if (Math.abs(currentShakeX) > 0.001 || Math.abs(currentShakeZ) > 0.001) {
@@ -302,7 +353,7 @@ export function Curtain({ pixelData }) {
             // Apply the column's push to this link
             if (colPushX[link.column] !== 0) {
                 const spreadFactor = (link.row / rows)
-                link.vx += colPushX[link.column] * spreadFactor * 0.28 // Double the movement
+                link.vx += colPushX[link.column] * spreadFactor * 0.28
                 link.vz += colPushZ[link.column] * spreadFactor * 0.28
             }
 
@@ -312,12 +363,12 @@ export function Curtain({ pixelData }) {
                 link.vx *= damping
                 link.x += link.vx
 
-                link.vz += (0 - instance.position.z) * 0.2
+                link.vz += (0 - link.z) * 0.2
                 link.vz *= damping
-                instance.position.z += link.vz
+                link.z += link.vz
             } else {
                 const prevLink = linksArray[i - 1]
-                const prevZ = children[i - 1].position.z
+                const prevZ = prevLink.z
 
                 // 1. Apply inertia and gravity
                 link.vx += (link.baseX - link.x) * gravity
@@ -326,10 +377,10 @@ export function Curtain({ pixelData }) {
                 link.vx = Math.max(-1.0, Math.min(1.0, link.vx))
                 link.x += link.vx
 
-                link.vz += (0 - instance.position.z) * gravity
+                link.vz += (0 - link.z) * gravity
                 link.vz *= damping
                 link.vz = Math.max(-1.0, Math.min(1.0, link.vz))
-                instance.position.z += link.vz
+                link.z += link.vz
 
                 // 2. Resolve rigid connections (PBD - Position Based Dynamics)
                 // Forces the link to follow the one above it almost instantly
@@ -337,51 +388,33 @@ export function Curtain({ pixelData }) {
                 link.x += dx * stiffness
                 link.vx += dx * stiffness * 0.3 // Transmit inertia
 
-                const dz = prevZ - instance.position.z
-                instance.position.z += dz * stiffness
+                const dz = prevZ - link.z
+                link.z += dz * stiffness
                 link.vz += dz * stiffness * 0.3
             }
 
-            link.ax = 0
-
-            // Assign new positions
-            instance.position.x = link.x
-            instance.updateMatrix()
+            // 4. Update the matrix of the instance directly on the GPU
+            tempObject.position.set(link.x, link.y, link.z)
+            tempObject.scale.set(beadScale, beadScale, beadScale)
+            tempObject.updateMatrix()
+            mesh.setMatrixAt(i, tempObject.matrix)
         }
+
+        // Notify Three.js that the instance matrices have changed
+        mesh.instanceMatrix.needsUpdate = true
     })
 
     return (
-        <Instances ref={instancesRef} limit={8000}>
+        <instancedMesh
+            ref={instancesRef}
+            args={[undefined, undefined, linksArray.length]}
+        >
             <LinkGeometry />
             <meshStandardMaterial
                 roughness={0.25}
                 metalness={0.2}
                 envMapIntensity={1.0}
             />
-
-            {linksArray.map((link, i) => {
-                let color = [0.96, 0.92, 0.84] // Classic butter white
-
-                if (pixelData && pixelData.length > 0) {
-                    const idx = link.row * columns + link.column
-                    if (pixelData[idx]) {
-                        color = getPaletteColor(pixelData[idx].color)
-                    }
-                } else {
-                    // Simple fallback pattern in case the parse fails
-                    if (link.row > rows - 3) color = getPaletteColor([0.12, 0.47, 0.17]) // Green
-                    else if (link.column > 10 && link.column < 25 && link.row < 18) color = getPaletteColor([0.19, 0.11, 0.11]) // Dark brown
-                }
-
-                return (
-                    <Instance
-                        key={i}
-                        position={[link.x, link.y, 0]}
-                        color={color}
-                        scale={[beadScale, beadScale, beadScale]}
-                    />
-                )
-            })}
-        </Instances>
+        </instancedMesh>
     )
 }

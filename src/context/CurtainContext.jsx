@@ -10,7 +10,7 @@ export function CurtainProvider({ children }) {
     const [gridSize, setGridSize] = useState({ columns: 0, rows: 0 });
 
     // Fixed physics, sound and rendering parameters (without user-modifiable controls)
-    const beadScale = 0.45;
+    const beadScale = typeof window !== 'undefined' && typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 0.65 : 0.45;
     const physicsSensitivity = 1.0;
     const soundEnabled = true;
     const soundVolume = 5;
