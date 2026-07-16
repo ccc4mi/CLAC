@@ -236,9 +236,20 @@ export function Curtain({ pixelData }) {
                         color = pixelData[idx].color
                     }
                 } else {
-                    // Simple fallback pattern in case the parse fails
-                    if (link.row > rows - 3) color = [0.12, 0.47, 0.17] // Green
-                    else if (link.column > 10 && link.column < 25 && link.row < 18) color = [0.19, 0.11, 0.11] // Dark brown
+                    // Render the classic striped pattern as a dynamic fallback
+                    const isZocalo = link.row >= rows - Math.ceil(rows * 0.125)
+                    if (isZocalo) {
+                        color = [0.85, 0.86, 0.85] // Butter/light grey (#d8dcd9)
+                    } else {
+                        // 2-by-2 column pattern
+                        // Green (#0d7625) or Black (#1a1a1a)
+                        const colPattern = Math.floor(link.column / 2) % 2
+                        if (colPattern === 0) {
+                            color = [0.05, 0.46, 0.15] // Green
+                        } else {
+                            color = [0.1, 0.1, 0.1] // Black
+                        }
+                    }
                 }
                 tempColor.setRGB(color[0], color[1], color[2])
                 mesh.setColorAt(i, tempColor)
