@@ -137,7 +137,7 @@ function AppContent() {
                     </button>
 
                     <div className="footer-text">
-                        2026 CLAC! made by <strong>ccc4.mi</strong>
+                        2026 CLAC! made by <strong><a href="https://www.ccc4mi.com" target="_blank" rel="noopener noreferrer">ccc4.mi</a></strong>
                     </div>
                 </div>
             )}
