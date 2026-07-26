@@ -15,7 +15,8 @@ export function Curtain({ pixelData }) {
         beadScale,
         physicsSensitivity,
         soundEnabled,
-        soundVolume
+        soundVolume,
+        performanceMode
     } = useCurtain()
 
     // Sync sound configurations
@@ -202,26 +203,59 @@ export function Curtain({ pixelData }) {
     }, [columns, rows, width, height, linkWidth, linkHeight])
 
     // Pre-allocated auxiliary structures to avoid GC thrashing in simulation loop
-    const tempObject = useMemo(() => new THREE.Object3D(), [])
     const tempColor = useMemo(() => new THREE.Color(), [])
     
     // Reactive flag to update colors on the InstancedMesh
     const colorsNeedUpdateRef = useRef(true)
+    const matrixInitializedRef = useRef(false)
 
     useEffect(() => {
         colorsNeedUpdateRef.current = true
-    }, [linksArray, pixelData, columns, rows])
+        matrixInitializedRef.current = false
+    }, [linksArray, pixelData, columns, rows, beadScale])
 
     // 60 FPS physical simulation loop
     useFrame((state) => {
-        if (!instancesRef.current) return
+        if (!instancesRef.current || !instancesRef.current.instanceMatrix) return
 
         const mesh = instancesRef.current
+        const array = mesh.instanceMatrix.array
         const targetX = (pointerRef.current.x * width) / 2
         const targetY = (pointerRef.current.y * height) / 2
         const pointerActive = pointerRef.current.active
 
         const globalSensitivity = physicsSensitivity
+
+        // Initialize/sync the full matrix array (scale and identity factors) if needed
+        if (!matrixInitializedRef.current) {
+            const limit = Math.min(linksArray.length, array.length / 16)
+            for (let i = 0; i < limit; i++) {
+                const idx = i * 16
+                const link = linksArray[i]
+                
+                array[idx] = beadScale
+                array[idx + 1] = 0
+                array[idx + 2] = 0
+                array[idx + 3] = 0
+                
+                array[idx + 4] = 0
+                array[idx + 5] = beadScale
+                array[idx + 6] = 0
+                array[idx + 7] = 0
+                
+                array[idx + 8] = 0
+                array[idx + 9] = 0
+                array[idx + 10] = beadScale
+                array[idx + 11] = 0
+                
+                array[idx + 12] = link.x
+                array[idx + 13] = link.y
+                array[idx + 14] = link.z
+                array[idx + 15] = 1
+            }
+            mesh.instanceMatrix.needsUpdate = true
+            matrixInitializedRef.current = true
+        }
 
         // 1. Lazy update colors on the InstancedMesh only when they actually change
         if (colorsNeedUpdateRef.current) {
@@ -404,11 +438,11 @@ export function Curtain({ pixelData }) {
                 link.vz += dz * stiffness * 0.3
             }
 
-            // 4. Update the matrix of the instance directly on the GPU
-            tempObject.position.set(link.x, link.y, link.z)
-            tempObject.scale.set(beadScale, beadScale, beadScale)
-            tempObject.updateMatrix()
-            mesh.setMatrixAt(i, tempObject.matrix)
+            // 4. Update the matrix of the instance directly on the GPU typed array
+            const idx = i * 16
+            array[idx + 12] = link.x
+            array[idx + 13] = link.y
+            array[idx + 14] = link.z
         }
 
         // Notify Three.js that the instance matrices have changed
@@ -420,7 +454,7 @@ export function Curtain({ pixelData }) {
             ref={instancesRef}
             args={[undefined, undefined, linksArray.length]}
         >
-            <LinkGeometry />
+            <LinkGeometry performanceMode={performanceMode} />
             <meshStandardMaterial
                 roughness={0.25}
                 metalness={0.2}

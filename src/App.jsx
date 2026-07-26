@@ -112,6 +112,19 @@ function AppContent() {
                     </div>
 
                     <div className="sidebar-section">
+                        <div className="section-title">Rendimiento</div>
+                        <label className="toggle-container">
+                            <input 
+                                type="checkbox" 
+                                checked={performanceMode} 
+                                onChange={(e) => setPerformanceMode(e.target.checked)} 
+                                className="toggle-checkbox"
+                            />
+                            <span className="toggle-label">Modo Rendimiento (bajar calidad 3D)</span>
+                        </label>
+                    </div>
+
+                    <div className="sidebar-section">
                         <div className="section-title">Cambiar máscara</div>
                         <Dropzone />
                         <button className="btn-secondary" onClick={handleReset}>

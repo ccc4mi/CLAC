@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import * as THREE from 'three'
 
-export function LinkGeometry() {
+export function LinkGeometry({ performanceMode }) {
     const shape = useMemo(() => {
         const s = new THREE.Shape()
         
@@ -65,24 +65,26 @@ export function LinkGeometry() {
         lowerSlot.closePath()
         s.holes.push(lowerSlot)
 
-        // 4 Star Holes
-        s.holes.push(createStarHole(-0.14, 0.19, 0.04, 0.018, 6))
-        s.holes.push(createStarHole(0.14, 0.19, 0.04, 0.018, 6))
-        s.holes.push(createStarHole(-0.12, -0.05, 0.035, 0.015, 6))
-        s.holes.push(createStarHole(0.12, -0.05, 0.035, 0.015, 6))
+        // 4 Star Holes - Skip if performance mode is enabled to save lots of triangles
+        if (!performanceMode) {
+            s.holes.push(createStarHole(-0.14, 0.19, 0.04, 0.018, 6))
+            s.holes.push(createStarHole(0.14, 0.19, 0.04, 0.018, 6))
+            s.holes.push(createStarHole(-0.12, -0.05, 0.035, 0.015, 6))
+            s.holes.push(createStarHole(0.12, -0.05, 0.035, 0.015, 6))
+        }
 
         return s
-    }, [])
+    }, [performanceMode])
 
     return (
         <extrudeGeometry
             args={[shape, { 
                 depth: 0.035, 
                 bevelEnabled: true, 
-                bevelSegments: 2, 
+                bevelSegments: performanceMode ? 1 : 2, 
                 steps: 1, 
-                bevelSize: 0.008, 
-                bevelThickness: 0.008 
+                bevelSize: performanceMode ? 0.004 : 0.008, 
+                bevelThickness: performanceMode ? 0.004 : 0.008 
             }]}
         />
     )

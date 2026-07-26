@@ -9,8 +9,12 @@ export function CurtainProvider({ children }) {
     const [currentImage, setCurrentImage] = useState(() => getPresetImageById('default'));
     const [gridSize, setGridSize] = useState({ columns: 0, rows: 0 });
 
-    // Fixed physics, sound and rendering parameters (without user-modifiable controls)
-    const beadScale = typeof window !== 'undefined' && typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 0.65 : 0.45;
+    const isMobile = typeof window !== 'undefined' && typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const performanceMode = isMobile;
+
+    // Dynamic bead scale based on device and performance setting
+    const beadScale = isMobile ? 0.80 : 0.45;
+
     const physicsSensitivity = 1.0;
     const soundEnabled = true;
     const soundVolume = 5;
@@ -35,7 +39,8 @@ export function CurtainProvider({ children }) {
             beadScale,
             physicsSensitivity,
             soundEnabled,
-            soundVolume
+            soundVolume,
+            performanceMode
         }}>
             {children}
         </CurtainContext.Provider>

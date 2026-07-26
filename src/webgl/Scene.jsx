@@ -1,8 +1,11 @@
 import React from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Curtain } from './Curtain'
+import { useCurtain } from '../context/CurtainContext'
 
 export function Scene({ pixelData }) {
+    const { performanceMode } = useCurtain()
+
     return (
         <div 
             id="curtain-canvas-container"
@@ -20,6 +23,7 @@ export function Scene({ pixelData }) {
             <Canvas
                 orthographic
                 camera={{ zoom: 45, position: [0, 0, 20] }}
+                dpr={performanceMode ? 1.1 : [1, 1.5]}
                 gl={{ 
                     preserveDrawingBuffer: true,
                     antialias: true,
