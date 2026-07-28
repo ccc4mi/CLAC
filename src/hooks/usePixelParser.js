@@ -22,6 +22,12 @@ export function usePixelParser() {
             canvas.height = filas;
 
             if (ctx) {
+                // Disable image smoothing to prevent color interpolation/gradients at boundaries
+                ctx.imageSmoothingEnabled = false;
+                ctx.mozImageSmoothingEnabled = false;
+                ctx.webkitImageSmoothingEnabled = false;
+                ctx.msImageSmoothingEnabled = false;
+
                 // Draw the stretched/adapted image to the grid
                 ctx.drawImage(img, 0, 0, columnas, filas);
 

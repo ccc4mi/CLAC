@@ -225,6 +225,40 @@ html,
     font-size: 18px;
 }
 
+/* Toggles de orientación */
+.orientation-row {
+    display: flex;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 4px;
+    border-radius: 14px;
+}
+
+.orientation-btn {
+    flex: 1;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.orientation-btn:hover {
+    color: #1a1a1a;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.orientation-btn.active {
+    background: #ffffff;
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 @media (max-width: 768px) {
     .sidebar-panel {
         width: calc(100vw - 40px);

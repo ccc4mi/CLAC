@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react';
 import { useCurtain } from '../context/CurtainContext';
 
-export function Dropzone() {
+export function Dropzone({ onUpload }) {
     const { setCurrentImage, isLoading } = useCurtain();
     const fileInputRef = useRef(null);
 
@@ -13,7 +13,7 @@ export function Dropzone() {
         e.preventDefault();
         const file = e.dataTransfer.files[0];
         processFile(file);
-    }, [setCurrentImage]);
+    }, [setCurrentImage, onUpload]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -25,6 +25,9 @@ export function Dropzone() {
             const reader = new FileReader();
             reader.onload = () => {
                 setCurrentImage(reader.result);
+                if (onUpload) {
+                    onUpload();
+                }
             };
             reader.readAsDataURL(file);
         }

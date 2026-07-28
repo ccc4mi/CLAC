@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CurtainProvider, useCurtain } from './context/CurtainContext';
 import { Scene } from './webgl/Scene';
 import { Dropzone } from './components/Dropzone';
-import { getPresetImageById, generateCustomPattern } from './utils/presets';
+import { getPresetImageById, generateCustomPattern, generateGridPattern } from './utils/presets';
 
 function AppContent() {
     const {
         pixelData,
-        setCurrentImage
+        setCurrentImage,
+        gridSize
     } = useCurtain();
 
     const [isPanelOpen, setIsPanelOpen] = useState(true);
@@ -15,19 +16,42 @@ function AppContent() {
     const [color1, setColor1] = useState('#0d7625');
     const [color2, setColor2] = useState('#1a1a1a');
     const [color3, setColor3] = useState('#d8dcd9');
+    const [orientation, setOrientation] = useState('vertical');
+    const [mode, setMode] = useState('preset'); // 'preset' | 'custom' | 'uploaded'
+
+    // Reactive pattern generation when gridSize or options change
+    useEffect(() => {
+        if (gridSize.columns > 0 && gridSize.rows > 0) {
+            if (mode === 'preset') {
+                const img = generateGridPattern(gridSize.columns, gridSize.rows, '#0d7625', '#1a1a1a', '#d8dcd9', orientation);
+                setCurrentImage(img);
+            } else if (mode === 'custom') {
+                const img = generateGridPattern(gridSize.columns, gridSize.rows, color1, color2, color3, orientation);
+                setCurrentImage(img);
+            }
+        }
+    }, [gridSize, mode, color1, color2, color3, orientation, setCurrentImage]);
 
     const handleReset = () => {
         setColor1('#0d7625');
         setColor2('#1a1a1a');
         setColor3('#d8dcd9');
-        setCurrentImage(getPresetImageById('default'));
+        setOrientation('vertical');
+        setMode('preset');
     };
 
     const handleColorChange = (c1, c2, c3) => {
         setColor1(c1);
         setColor2(c2);
         setColor3(c3);
-        setCurrentImage(generateCustomPattern(c1, c2, c3));
+        setMode('custom');
+    };
+
+    const handleOrientationChange = (newOrientation) => {
+        setOrientation(newOrientation);
+        if (mode === 'uploaded') {
+            setMode('custom');
+        }
     };
 
     const handleDownload = () => {
@@ -112,8 +136,26 @@ function AppContent() {
                     </div>
 
                     <div className="sidebar-section">
+                        <div className="section-title">Orientación</div>
+                        <div className="orientation-row">
+                            <button
+                                className={`orientation-btn ${orientation === 'vertical' ? 'active' : ''}`}
+                                onClick={() => handleOrientationChange('vertical')}
+                            >
+                                Vertical
+                            </button>
+                            <button
+                                className={`orientation-btn ${orientation === 'horizontal' ? 'active' : ''}`}
+                                onClick={() => handleOrientationChange('horizontal')}
+                            >
+                                Horizontal
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="sidebar-section">
                         <div className="section-title">Cambiar máscara</div>
-                        <Dropzone />
+                        <Dropzone onUpload={() => setMode('uploaded')} />
                         <button className="btn-secondary" onClick={handleReset}>
                             Revertir a rayado clásico
                         </button>
