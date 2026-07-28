@@ -13,7 +13,7 @@ export function CurtainProvider({ children }) {
     const performanceMode = isMobile;
 
     // Dynamic bead scale based on device and performance setting
-    const beadScale = isMobile ? 0.80 : 0.45;
+    const beadScale = isMobile ? 0.60 : 0.45;
 
     const physicsSensitivity = 1.0;
     const soundEnabled = true;
